@@ -757,12 +757,18 @@ function submitBooking() {
     const list = allBk[editingOff];
     const idx  = list.findIndex(b=>b.id===editingId);
     if (idx !== -1) {
-      const d=parseLD(dateVal); const ws=weekStart(editingOff);
-      const diff=Math.round((d-ws)/86400000);
-      if(diff<0||diff>5) { showToast('所選日期不在該週範圍內'); return; }
-      list[idx]={...list[idx],day:diff,m:selMach,s:sH,e:eH,dept,customDept,doc:surgeon,assist,proc,dur:dur?parseInt(dur):null,mrn,note};
+      const d=parseLD(dateVal);
+      const totalDiff=Math.round((d-BASE)/86400000);
+      const newOff=Math.floor(totalDiff/7);
+      const newDay=totalDiff-newOff*7;
+      if(newDay<0||newDay>5) { showToast('僅支援週一至週六'); return; }
+      const updated={...list[idx],day:newDay,m:selMach,s:sH,e:eH,dept,customDept,doc:surgeon,assist,proc,dur:dur?parseInt(dur):null,mrn,note};
+      // 若跨週，從原週移除並加入新週
+      allBk[editingOff]=list.filter(b=>b.id!==editingId);
+      if(!allBk[newOff]) allBk[newOff]=[];
+      allBk[newOff].push(updated);
       closeModal(); render(); showToast('預約已更新 ✓');
-      apiCall('update', { booking: bkToApi(list[idx], editingOff) }); // 背景同步
+      apiCall('update', { booking: bkToApi(updated, newOff) }); // 背景同步
     }
   } else {
     // CREATE new
