@@ -480,8 +480,6 @@ const TOTAL_H   = END_H - START_H;
 const WORK_H    = 8;
 const WORK_DAYS = 5;
 const DAYS      = ['週一','週二','週三','週四','週五','週六'];
-const TODAY     = new Date(2026, 5, 15);
-
 const DEPT = {
   uro:  { label:'泌尿科',   cls:'d-uro',  dot:'var(--c-uro-dot)'  },
   surg: { label:'一般外科', cls:'d-surg', dot:'var(--c-surg-dot)' },
@@ -498,7 +496,9 @@ function getDeptLabel(b) {
 // ══════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════
-const BASE  = new Date(2026, 5, 15);
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const _dow  = (TODAY.getDay() + 6) % 7;          // 0=週一 … 6=週日
+const BASE  = new Date(TODAY); BASE.setDate(TODAY.getDate() - _dow); // 本週週一
 let weekOff = 0;
 let nextId  = Date.now(); // timestamp-based → 跨裝置唯一
 
@@ -899,7 +899,7 @@ function editBooking() {
 // ══════════════════════════════════════════
 // MONTH PREVIEW
 // ══════════════════════════════════════════
-let prevY=TODAY.getFullYear(), prevM=TODAY.getMonth();
+let prevY=TODAY.getFullYear(), prevM=TODAY.getMonth(); // TODAY 已在 DATA 區宣告
 function openMonthPreview() { prevY=weekStart().getFullYear(); prevM=weekStart().getMonth(); renderMonthPreview(); document.getElementById('month-overlay').classList.add('open'); }
 function closeMonthPreview() { document.getElementById('month-overlay').classList.remove('open'); }
 function changeMonthPreview(d) { prevM+=d; if(prevM>11){prevM=0;prevY++;} if(prevM<0){prevM=11;prevY--;} renderMonthPreview(); }
