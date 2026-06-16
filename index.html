@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>達文西排刀預約管理系統</title>
+<style>
+@font-face { font-family:'GenSen'; src:url('assets/源泉圓體/GenSenRounded2-EL.ttc') format('truetype'); font-weight:200; font-display:swap; }
+@font-face { font-family:'GenSen'; src:url('assets/源泉圓體/GenSenRounded2-L.ttc')  format('truetype'); font-weight:300; font-display:swap; }
+@font-face { font-family:'GenSen'; src:url('assets/源泉圓體/GenSenRounded2-R.ttc')  format('truetype'); font-weight:400; font-display:swap; }
+@font-face { font-family:'GenSen'; src:url('assets/源泉圓體/GenSenRounded2-M.ttc')  format('truetype'); font-weight:500; font-display:swap; }
+@font-face { font-family:'GenSen'; src:url('assets/源泉圓體/GenSenRounded2-B.ttc')  format('truetype'); font-weight:700; font-display:swap; }
+@font-face { font-family:'GenSen'; src:url('assets/源泉圓體/GenSenRounded2-H.ttc')  format('truetype'); font-weight:900; font-display:swap; }
+
+/* ── TOKENS ── */
+:root {
+  /* TMU Crimson */
+  --cr:        oklch(0.41 0.185 24);
+  --cr-hover:  oklch(0.48 0.175 24);
+  --cr-soft:   oklch(0.58 0.155 24);
+  --cr-tint:   oklch(0.97 0.022 24);
+  --cr-light:  oklch(0.93 0.040 24);
+
+  --bg:        oklch(0.975 0.005 24);
+  --surface:   oklch(0.995 0.003 24);
+  --border:    oklch(0.90  0.010 24);
+  --border-lt: oklch(0.94  0.006 24);
+  --text-1:    oklch(0.16  0.025 24);
+  --text-2:    oklch(0.40  0.020 24);
+  --text-3:    oklch(0.58  0.015 24);
+  --text-4:    oklch(0.72  0.010 24);
+
+  /* Department palette */
+  --c-uro-bg:   oklch(0.94 0.038 252); --c-uro-fg:   oklch(0.25 0.10 252); --c-uro-bd:   oklch(0.80 0.07 252); --c-uro-dot:  oklch(0.52 0.18 252);
+  --c-surg-bg:  oklch(0.94 0.042 155); --c-surg-fg:  oklch(0.25 0.10 155); --c-surg-bd:  oklch(0.80 0.08 155); --c-surg-dot: oklch(0.50 0.18 155);
+  --c-obgyn-bg: oklch(0.94 0.042 340); --c-obgyn-fg: oklch(0.26 0.10 340); --c-obgyn-bd: oklch(0.80 0.08 340); --c-obgyn-dot:oklch(0.54 0.18 340);
+  --c-thor-bg:  oklch(0.94 0.056  68); --c-thor-fg:  oklch(0.26 0.12  68); --c-thor-bd:  oklch(0.80 0.10  68); --c-thor-dot: oklch(0.58 0.20  68);
+  --c-oth-bg:   oklch(0.94 0.038 288); --c-oth-fg:   oklch(0.26 0.09 288); --c-oth-bd:   oklch(0.80 0.07 288); --c-oth-dot:  oklch(0.55 0.16 288);
+
+  --hour-h: 60px;
+  --gutter-w: 66px;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:'GenSen','PingFang TC','Microsoft JhengHei UI',system-ui,sans-serif;
+  background:var(--bg); color:var(--text-1);
+  font-size:15px; line-height:1.55;
+  height:100vh; display:flex; flex-direction:column; overflow:hidden;
+}
+
+/* ════ HEADER ════ */
+.app-header {
+  height:68px;
+  background:linear-gradient(135deg, var(--cr) 0%, var(--cr-hover) 100%);
+  display:flex; align-items:center; justify-content:center;
+  padding:0 24px; flex-shrink:0;
+  box-shadow:0 2px 14px oklch(0.41 0.185 24 / 0.35);
+  position:relative; z-index:100;
+}
+.header-left { display:flex; align-items:center; gap:14px; }
+.header-logo { width:44px; height:44px; display:flex; align-items:center; justify-content:center; }
+.header-logo img { width:42px; height:42px; object-fit:contain; filter:brightness(0) invert(1); opacity:0.95; }
+.header-title { color:white; font-size:22px; font-weight:700; letter-spacing:0.02em; }
+
+
+/* ════ TOOLBAR ════ */
+.toolbar {
+  height:58px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.week-nav { display:flex; align-items:center; gap:8px; }
+.nav-arrow {
+  width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+  border:1.5px solid var(--border); border-radius:10px;
+  background:var(--surface); cursor:pointer; color:var(--text-2); transition:all 0.14s;
+}
+.nav-arrow:hover { background:var(--cr-tint); border-color:var(--cr-soft); color:var(--cr); }
+.week-label { font-size:16px; font-weight:700; color:var(--text-1); min-width:230px; text-align:center; }
+.toolbar-right { display:flex; align-items:center; gap:8px; }
+.t-btn {
+  padding:7px 16px; border:1.5px solid var(--border); border-radius:20px;
+  background:var(--surface); font-size:14px; font-weight:600; font-family:inherit;
+  cursor:pointer; color:var(--text-2); transition:all 0.14s; white-space:nowrap;
+}
+.t-btn:hover { background:var(--cr-tint); border-color:var(--cr-soft); color:var(--cr); }
+.t-btn.primary { background:var(--cr); color:white; border-color:transparent; padding:7px 20px; }
+.t-btn.primary:hover { background:var(--cr-hover); }
+
+/* ════ BODY ════ */
+.app-body { flex:1; display:flex; overflow:hidden; }
+
+/* ════ CALENDAR ════ */
+.cal-area { flex:1; overflow:auto; }
+.cal-area::-webkit-scrollbar { width:7px; height:7px; }
+.cal-area::-webkit-scrollbar-track { background:var(--bg); }
+.cal-area::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+.cal-wrapper { min-width:900px; }
+
+.cal-head {
+  display:flex; position:sticky; top:0; z-index:50;
+  background:var(--surface); border-bottom:2px solid var(--border);
+  box-shadow:0 2px 8px oklch(0 0 0 / 0.05);
+}
+.cal-head-gutter { width:var(--gutter-w); flex-shrink:0; border-right:1px solid var(--border); }
+.cal-head-day { flex:1; border-right:1px solid var(--border); }
+.cal-head-day:last-child { border-right:none; }
+.day-meta { padding:8px 0 6px; text-align:center; border-bottom:1px solid var(--border-lt); }
+.day-weekname { font-size:11px; font-weight:700; color:var(--text-4); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:4px; }
+.day-num-wrap { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto; transition:background 0.15s; }
+.day-num-wrap.today { background:var(--cr); }
+.day-num-wrap.today .day-num { color:white; }
+.day-num { font-size:20px; font-weight:700; color:var(--text-1); line-height:1; }
+.machine-heads { display:flex; }
+.machine-head { flex:1; padding:5px 6px; font-size:11px; font-weight:700; color:var(--text-3); text-align:center; letter-spacing:0.06em; text-transform:uppercase; }
+.machine-head:first-child { border-right:1px solid var(--border-lt); }
+
+.cal-body { display:flex; }
+.time-gutter { width:var(--gutter-w); flex-shrink:0; border-right:1px solid var(--border); }
+.time-label { height:var(--hour-h); display:flex; align-items:flex-start; justify-content:flex-end; padding:4px 10px 0; font-size:11px; color:var(--text-4); font-weight:600; letter-spacing:0.03em; position:relative; top:-10px; }
+.time-label:first-child { top:0; }
+.cal-day-col { flex:1; display:flex; border-right:1px solid var(--border); }
+.cal-day-col:last-child { border-right:none; }
+.machine-col { flex:1; position:relative; height:calc(var(--hour-h)*12); }
+.machine-col:first-child { border-right:1px solid var(--border-lt); }
+.h-line { position:absolute; left:0; right:0; height:1px; background:var(--border-lt); pointer-events:none; }
+.h-line.major { background:var(--border); }
+.lunch-band { position:absolute; left:0; right:0; top:calc(var(--hour-h)*5); height:var(--hour-h); background:repeating-linear-gradient(-45deg,oklch(0.95 0.004 24),oklch(0.95 0.004 24) 4px,oklch(0.98 0.002 24) 4px,oklch(0.98 0.002 24) 10px); pointer-events:none; z-index:1; }
+.lunch-label { position:absolute; left:0; right:0; top:calc(var(--hour-h)*5); height:var(--hour-h); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--text-4); letter-spacing:0.10em; text-transform:uppercase; pointer-events:none; z-index:2; }
+.hour-cell { position:absolute; left:0; right:0; height:var(--hour-h); cursor:pointer; z-index:3; transition:background 0.1s; }
+.hour-cell:hover { background:var(--cr-tint); }
+.plus-hint { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:22px; font-weight:300; color:var(--cr-soft); opacity:0; pointer-events:none; transition:opacity 0.1s; line-height:1; }
+.hour-cell:hover .plus-hint { opacity:1; }
+
+/* ── Booking blocks ── */
+.booking-block {
+  position:absolute; left:4px; right:4px; border-radius:10px; padding:8px 10px;
+  z-index:10; cursor:pointer; overflow:hidden;
+  transition:transform 0.15s cubic-bezier(0.16,1,0.3,1), box-shadow 0.15s cubic-bezier(0.16,1,0.3,1);
+}
+.booking-block:hover { transform:scale(1.03) translateY(-1px); box-shadow:0 8px 24px oklch(0 0 0 / 0.14); z-index:20; overflow:visible; }
+.b-dept-tag { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:900; letter-spacing:0.05em; margin-bottom:3px; }
+.b-dept-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.b-doctor   { font-size:12px; font-weight:500; opacity:0.85; margin-bottom:1px; }
+.b-procedure{ font-size:11px; opacity:0.68; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.b-time     { font-size:10px; font-weight:700; opacity:0.5; margin-top:4px; letter-spacing:0.04em; }
+.d-uro  { background:var(--c-uro-bg);  color:var(--c-uro-fg);  border:1px solid var(--c-uro-bd);  }
+.d-surg { background:var(--c-surg-bg); color:var(--c-surg-fg); border:1px solid var(--c-surg-bd); }
+.d-obgyn{ background:var(--c-obgyn-bg);color:var(--c-obgyn-fg);border:1px solid var(--c-obgyn-bd);}
+.d-thor { background:var(--c-thor-bg); color:var(--c-thor-fg); border:1px solid var(--c-thor-bd); }
+.d-oth  { background:var(--c-oth-bg);  color:var(--c-oth-fg);  border:1px solid var(--c-oth-bd);  }
+
+/* ════ SIDEBAR ════ */
+.sidebar { width:220px; flex-shrink:0; border-left:1px solid var(--border); background:var(--surface); overflow-y:auto; padding:20px 16px; display:flex; flex-direction:column; gap:24px; }
+.sidebar::-webkit-scrollbar { width:5px; }
+.sidebar::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.sb-title { font-size:10px; font-weight:900; color:var(--text-4); letter-spacing:0.14em; text-transform:uppercase; margin-bottom:12px; }
+.legend-row { display:flex; align-items:center; gap:9px; margin-bottom:8px; }
+.legend-chip { width:26px; height:12px; border-radius:4px; flex-shrink:0; }
+.legend-name { font-size:13px; color:var(--text-2); font-weight:600; }
+.stat-card { background:var(--bg); border:1px solid var(--border-lt); border-radius:var(--r-md); padding:12px 14px; margin-bottom:8px; }
+.stat-card:last-child { margin-bottom:0; }
+.stat-card-label { font-size:11px; color:var(--text-3); font-weight:600; margin-bottom:4px; }
+.stat-card-value { font-size:26px; font-weight:900; color:var(--text-1); line-height:1; }
+.stat-card-value.accent { color:var(--cr); }
+.stat-card-sub { font-size:11px; color:var(--text-3); margin-top:2px; }
+.util-row { margin-bottom:10px; }
+.util-meta { display:flex; justify-content:space-between; font-size:12px; color:var(--text-2); margin-bottom:5px; font-weight:600; }
+.util-pct { font-weight:900; color:var(--cr); font-size:13px; }
+.util-track { height:6px; background:var(--bg); border-radius:3px; overflow:hidden; border:1px solid var(--border-lt); }
+.util-fill  { height:100%; background:linear-gradient(90deg,var(--cr) 0%,var(--cr-soft) 100%); border-radius:3px; transition:width 0.6s cubic-bezier(0.16,1,0.3,1); }
+.hint-box { background:var(--cr-tint); border:1px solid var(--cr-light); border-radius:var(--r-sm); padding:11px 13px; font-size:12px; color:var(--text-2); line-height:1.75; }
+.hint-box strong { color:var(--cr); font-weight:800; display:block; margin-bottom:4px; }
+
+/* ════ MODAL BASE ════ */
+.modal-overlay { position:fixed; inset:0; background:oklch(0 0 0 / 0.42); z-index:200; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+.modal-overlay.open { display:flex; }
+@keyframes popIn { from{transform:translateY(16px) scale(0.97);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
+.modal-box { background:var(--surface); border-radius:var(--r-lg); width:520px; max-height:92vh; overflow-y:auto; box-shadow:0 28px 80px oklch(0 0 0 / 0.25); animation:popIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+.modal-box::-webkit-scrollbar { width:6px; }
+.modal-box::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.modal-head { padding:22px 24px 18px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; }
+.modal-title { font-size:18px; font-weight:800; letter-spacing:-0.01em; color:var(--text-1); }
+.modal-sub { font-size:13px; color:var(--text-3); margin-top:2px; }
+.close-btn { width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); cursor:pointer; color:var(--text-2); font-size:15px; transition:all 0.12s; flex-shrink:0; }
+.close-btn:hover { background:var(--bg); }
+.modal-body { padding:22px 24px; }
+.f-section { margin-bottom:18px; }
+.f-label { display:block; font-size:11px; font-weight:900; color:var(--text-2); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:7px; }
+.req { color:var(--cr); }
+.f-row { display:flex; gap:12px; margin-bottom:18px; }
+.f-row .f-section { flex:1; margin-bottom:0; }
+.f-input,.f-select { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-family:inherit; color:var(--text-1); background:var(--surface); outline:none; transition:border-color 0.12s,box-shadow 0.12s; }
+.f-input:focus,.f-select:focus { border-color:var(--cr-soft); box-shadow:0 0 0 3px oklch(0.41 0.185 24 / 0.10); }
+.f-textarea { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-family:inherit; color:var(--text-1); background:var(--surface); resize:none; height:72px; outline:none; transition:border-color 0.12s,box-shadow 0.12s; }
+.f-textarea:focus { border-color:var(--cr-soft); box-shadow:0 0 0 3px oklch(0.41 0.185 24 / 0.10); }
+.mach-toggle { display:flex; gap:8px; }
+.m-opt { flex:1; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px; text-align:center; cursor:pointer; font-size:14px; font-weight:700; color:var(--text-2); user-select:none; transition:all 0.14s; font-family:inherit; }
+.m-opt.sel { border-color:var(--cr-soft); color:var(--cr); background:var(--cr-tint); }
+.modal-foot { padding:16px 24px 22px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
+.btn-sec { padding:9px 20px; border:1.5px solid var(--border); border-radius:20px; background:var(--surface); font-size:14px; font-weight:700; cursor:pointer; color:var(--text-2); font-family:inherit; transition:all 0.12s; }
+.btn-sec:hover { background:var(--bg); }
+.btn-pri { padding:9px 26px; border:none; border-radius:20px; background:var(--cr); color:white; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:background 0.14s; }
+.btn-pri:hover { background:var(--cr-hover); }
+.btn-danger { padding:9px 20px; border:1.5px solid oklch(0.75 0.10 24); border-radius:20px; background:white; font-size:14px; font-weight:700; cursor:pointer; color:var(--cr); font-family:inherit; transition:all 0.14s; }
+.btn-danger:hover { background:var(--cr-tint); border-color:var(--cr-soft); }
+.btn-danger.confirm { background:var(--cr); color:white; border-color:var(--cr); }
+
+/* custom dept */
+.custom-dept-wrap { margin-top:8px; display:none; }
+.custom-dept-wrap.show { display:block; }
+
+/* ════ DETAIL MODAL ════ */
+.detail-box { background:var(--surface); border-radius:var(--r-lg); width:480px; box-shadow:0 28px 80px oklch(0 0 0 / 0.25); animation:popIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+.detail-dept-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:3px 10px; border-radius:20px;
+  font-size:12px; font-weight:700; margin-top:6px;
+}
+.detail-fields { padding:6px 24px 20px; }
+.detail-row { display:flex; gap:16px; padding:10px 0; border-bottom:1px solid var(--border-lt); align-items:flex-start; }
+.detail-row:last-child { border-bottom:none; }
+.detail-key { width:90px; flex-shrink:0; font-size:12px; font-weight:700; color:var(--text-3); letter-spacing:0.04em; line-height:1.6; }
+.detail-val { flex:1; font-size:14px; color:var(--text-1); font-weight:500; line-height:1.6; }
+.detail-val.empty { color:var(--text-4); font-style:italic; }
+.detail-foot { padding:14px 24px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+
+/* ════ MONTH PREVIEW ════ */
+.month-box { background:var(--surface); border-radius:var(--r-lg); width:480px; box-shadow:0 28px 80px oklch(0 0 0 / 0.25); animation:popIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+.month-head { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.month-nav { display:flex; align-items:center; gap:8px; }
+.month-label { font-size:17px; font-weight:800; min-width:120px; text-align:center; }
+.month-grid-wrap { padding:16px 20px 20px; }
+.month-dow-row { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:6px; }
+.month-dow { text-align:center; font-size:11px; font-weight:700; color:var(--text-4); letter-spacing:0.06em; padding:4px 0; }
+.month-cells { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.month-cell { aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; cursor:pointer; transition:background 0.12s; font-size:13px; font-weight:600; color:var(--text-2); gap:2px; }
+.month-cell:hover { background:var(--cr-tint); }
+.month-cell.today-cell { background:var(--cr); color:white; }
+.month-cell.other-month { color:var(--text-4); }
+.month-cell.has-booking:not(.today-cell) { background:var(--cr-tint); color:var(--cr); }
+.month-dots { display:flex; gap:2px; flex-wrap:wrap; justify-content:center; max-width:36px; }
+.month-dot { width:5px; height:5px; border-radius:50%; }
+
+/* ════ HISTORY ════ */
+.hist-box { background:var(--surface); border-radius:var(--r-lg); width:600px; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 28px 80px oklch(0 0 0 / 0.25); animation:popIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+.hist-head { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.hist-filters { padding:14px 24px; border-bottom:1px solid var(--border); display:flex; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+.filter-select { padding:7px 12px; border:1.5px solid var(--border); border-radius:20px; font-size:13px; font-family:inherit; color:var(--text-2); background:var(--surface); outline:none; cursor:pointer; transition:border-color 0.12s; }
+.filter-select:focus { border-color:var(--cr-soft); }
+.hist-body { overflow-y:auto; padding:16px 24px; flex:1; }
+.hist-body::-webkit-scrollbar { width:6px; }
+.hist-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.hist-week-group { margin-bottom:20px; }
+.hist-week-label { font-size:11px; font-weight:900; color:var(--text-4); letter-spacing:0.10em; text-transform:uppercase; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border-lt); }
+.hist-row { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; margin-bottom:6px; background:var(--bg); border:1px solid var(--border-lt); transition:background 0.12s; }
+.hist-row:hover { background:var(--cr-tint); }
+.hist-dept-chip { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.hist-info { flex:1; min-width:0; }
+.hist-title { font-size:13px; font-weight:700; color:var(--text-1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hist-meta { font-size:12px; color:var(--text-3); margin-top:1px; }
+.hist-time { font-size:12px; font-weight:700; color:var(--text-2); white-space:nowrap; }
+.hist-empty { text-align:center; color:var(--text-4); font-size:14px; padding:40px 0; }
+
+/* ════ TOAST ════ */
+.toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--cr); color:white; padding:11px 22px; border-radius:20px; font-size:14px; font-weight:700; z-index:300; transition:transform 0.28s cubic-bezier(0.16,1,0.3,1),opacity 0.28s; opacity:0; pointer-events:none; white-space:nowrap; box-shadow:0 4px 20px oklch(0.41 0.185 24 / 0.35); }
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+
+/* ════ LOADING ════ */
+.loading-overlay {
+  display:none; position:fixed; inset:0;
+  background:oklch(0.99 0.003 24 / 0.80);
+  z-index:500; flex-direction:column;
+  align-items:center; justify-content:center;
+  backdrop-filter:blur(2px);
+}
+.loading-spinner {
+  width:40px; height:40px;
+  border:3px solid var(--border);
+  border-top-color:var(--cr);
+  border-radius:50%;
+  animation:spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { margin-top:12px; font-size:13px; font-weight:600; color:var(--text-2); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="header-left">
+    <div class="header-logo"><img src="assets/Emblem_of_Taipei_Medical_University.svg.png" alt="北醫Logo"></div>
+    <div class="header-title">達文西排刀預約管理系統</div>
+  </div>
+</header>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="week-nav">
+    <button class="nav-arrow" onclick="changeWeek(-1)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="week-label" id="week-label"></span>
+    <button class="nav-arrow" onclick="changeWeek(1)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+  <div class="toolbar-right">
+    <button class="t-btn" onclick="goToday()">今日</button>
+    <button class="t-btn" onclick="openMonthPreview()">本月預覽</button>
+    <button class="t-btn" onclick="openHistory()">歷史紀錄</button>
+    <button class="t-btn" onclick="exportCSV()">匯出 CSV</button>
+    <button class="t-btn primary" onclick="openModal()">＋ 新增預約</button>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="app-body">
+  <div class="cal-area">
+    <div class="cal-wrapper">
+      <div class="cal-head" id="cal-head"><div class="cal-head-gutter"></div></div>
+      <div class="cal-body">
+        <div class="time-gutter" id="time-gutter"></div>
+        <div id="cal-cols" style="display:flex;flex:1;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div>
+      <div class="sb-title">科別圖例</div>
+      <div class="legend-row"><div class="legend-chip" style="background:var(--c-uro-bg);border:1px solid var(--c-uro-bd)"></div><span class="legend-name" style="color:var(--c-uro-fg)">泌尿科</span></div>
+      <div class="legend-row"><div class="legend-chip" style="background:var(--c-surg-bg);border:1px solid var(--c-surg-bd)"></div><span class="legend-name" style="color:var(--c-surg-fg)">一般外科</span></div>
+      <div class="legend-row"><div class="legend-chip" style="background:var(--c-obgyn-bg);border:1px solid var(--c-obgyn-bd)"></div><span class="legend-name" style="color:var(--c-obgyn-fg)">婦產科</span></div>
+      <div class="legend-row"><div class="legend-chip" style="background:var(--c-thor-bg);border:1px solid var(--c-thor-bd)"></div><span class="legend-name" style="color:var(--c-thor-fg)">胸腔外科</span></div>
+      <div class="legend-row"><div class="legend-chip" style="background:var(--c-oth-bg);border:1px solid var(--c-oth-bd)"></div><span class="legend-name" style="color:var(--c-oth-fg)">其他</span></div>
+    </div>
+    <div>
+      <div class="sb-title">本週機台使用率</div>
+      <div class="util-row"><div class="util-meta"><span>機台一</span><span class="util-pct" id="util1-pct">—</span></div><div class="util-track"><div class="util-fill" id="util1-bar" style="width:0%"></div></div></div>
+      <div class="util-row"><div class="util-meta"><span>機台二</span><span class="util-pct" id="util2-pct">—</span></div><div class="util-track"><div class="util-fill" id="util2-bar" style="width:0%"></div></div></div>
+    </div>
+    <div>
+      <div class="sb-title">本週統計</div>
+      <div class="stat-card"><div class="stat-card-label">排刀次數</div><div class="stat-card-value accent" id="stat-count">—</div><div class="stat-card-sub">台 / 本週</div></div>
+      <div class="stat-card"><div class="stat-card-label">累計手術時數</div><div class="stat-card-value" id="stat-hours">—</div><div class="stat-card-sub">小時 / 本週</div></div>
+      <div class="stat-card"><div class="stat-card-label">最高使用科別</div><div class="stat-card-value" id="stat-topdept" style="font-size:18px">—</div></div>
+    </div>
+    <div class="hint-box"><strong>操作說明</strong>點擊空白時段快速預約<br>點擊色塊查看 / 編輯詳情<br>← → 鍵切換週次</div>
+  </div>
+</div>
+
+<!-- ══ BOOKING MODAL ══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="overlayClick(event,'modal-overlay')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div><div class="modal-title" id="modal-title">新增排刀預約</div><div class="modal-sub" id="modal-sub">請填寫以下資訊</div></div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="f-section">
+        <label class="f-label">機台 <span class="req">*</span></label>
+        <div class="mach-toggle"><div class="m-opt sel" id="mopt-0" onclick="pickMachine(0)">機台一</div><div class="m-opt" id="mopt-1" onclick="pickMachine(1)">機台二</div></div>
+      </div>
+      <div class="f-row">
+        <div class="f-section"><label class="f-label">日期 <span class="req">*</span></label><input type="date" class="f-input" id="f-date"></div>
+      </div>
+      <div class="f-row">
+        <div class="f-section"><label class="f-label">開始時間 <span class="req">*</span></label><select class="f-select" id="f-start"></select></div>
+        <div class="f-section"><label class="f-label">結束時間 <span class="req">*</span></label><select class="f-select" id="f-end"></select></div>
+      </div>
+      <div class="f-section">
+        <label class="f-label">科別 <span class="req">*</span></label>
+        <select class="f-select" id="f-dept" onchange="onDeptChange()">
+          <option value="">請選擇科別</option>
+          <option value="uro">泌尿科</option>
+          <option value="surg">一般外科</option>
+          <option value="obgyn">婦產科</option>
+          <option value="thor">胸腔外科</option>
+          <option value="oth">其他（自填）</option>
+        </select>
+        <div class="custom-dept-wrap" id="custom-dept-wrap">
+          <input type="text" class="f-input" id="f-custom-dept" placeholder="請輸入科別名稱">
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-section"><label class="f-label">主刀醫師 <span class="req">*</span></label><input type="text" class="f-input" id="f-surgeon" placeholder="姓名"></div>
+        <div class="f-section"><label class="f-label">助理醫師</label><input type="text" class="f-input" id="f-assist" placeholder="選填"></div>
+      </div>
+      <div class="f-section"><label class="f-label">手術名稱 <span class="req">*</span></label><input type="text" class="f-input" id="f-proc" placeholder="例：達文西攝護腺切除術"></div>
+      <div class="f-row">
+        <div class="f-section"><label class="f-label">預估時長（小時）</label><input type="number" class="f-input" id="f-dur" placeholder="2" min="1" max="10"></div>
+        <div class="f-section"><label class="f-label">病歷號</label><input type="text" class="f-input" id="f-mrn" placeholder="選填"></div>
+      </div>
+      <div class="f-section"><label class="f-label">備註</label><textarea class="f-textarea" id="f-note" placeholder="特殊需求或說明..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="closeModal()">取消</button>
+      <button class="btn-pri" onclick="submitBooking()">確認預約</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DETAIL MODAL ══ -->
+<div class="modal-overlay" id="detail-overlay" onclick="overlayClick(event,'detail-overlay')">
+  <div class="detail-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="detail-title"></div>
+        <div id="detail-badge"></div>
+      </div>
+      <button class="close-btn" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-fields" id="detail-fields"></div>
+    <div class="detail-foot">
+      <button class="btn-danger" id="del-btn" onclick="deleteOrConfirm()">刪除預約</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-sec" onclick="closeDetail()">關閉</button>
+        <button class="btn-pri" onclick="editBooking()">編輯</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MONTH MODAL ══ -->
+<div class="modal-overlay" id="month-overlay" onclick="overlayClick(event,'month-overlay')">
+  <div class="month-box">
+    <div class="month-head">
+      <div class="month-nav">
+        <button class="nav-arrow" onclick="changeMonthPreview(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <span class="month-label" id="month-label"></span>
+        <button class="nav-arrow" onclick="changeMonthPreview(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+      <button class="close-btn" onclick="closeMonthPreview()">✕</button>
+    </div>
+    <div class="month-grid-wrap">
+      <div class="month-dow-row"><div class="month-dow">一</div><div class="month-dow">二</div><div class="month-dow">三</div><div class="month-dow">四</div><div class="month-dow">五</div><div class="month-dow">六</div><div class="month-dow">日</div></div>
+      <div class="month-cells" id="month-cells"></div>
+    </div>
+    <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;"><button class="btn-sec" onclick="closeMonthPreview()">關閉</button></div>
+  </div>
+</div>
+
+<!-- ══ HISTORY MODAL ══ -->
+<div class="modal-overlay" id="hist-overlay" onclick="overlayClick(event,'hist-overlay')">
+  <div class="hist-box">
+    <div class="hist-head"><div><div class="modal-title">排刀歷史紀錄</div><div class="modal-sub">全部排刀紀錄</div></div><button class="close-btn" onclick="closeHistory()">✕</button></div>
+    <div class="hist-filters">
+      <select class="filter-select" id="hist-filter-dept" onchange="renderHistory()"><option value="">全部科別</option><option value="uro">泌尿科</option><option value="surg">一般外科</option><option value="obgyn">婦產科</option><option value="thor">胸腔外科</option><option value="oth">其他</option></select>
+      <select class="filter-select" id="hist-filter-mach" onchange="renderHistory()"><option value="">全部機台</option><option value="0">機台一</option><option value="1">機台二</option></select>
+    </div>
+    <div class="hist-body" id="hist-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">正在同步資料…</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════
+const HOUR_H    = 60;
+const START_H   = 7;
+const END_H     = 19;
+const TOTAL_H   = END_H - START_H;
+const WORK_H    = 8;
+const WORK_DAYS = 5;
+const DAYS      = ['週一','週二','週三','週四','週五','週六'];
+const TODAY     = new Date(2026, 5, 15);
+
+const DEPT = {
+  uro:  { label:'泌尿科',   cls:'d-uro',  dot:'var(--c-uro-dot)'  },
+  surg: { label:'一般外科', cls:'d-surg', dot:'var(--c-surg-dot)' },
+  obgyn:{ label:'婦產科',   cls:'d-obgyn',dot:'var(--c-obgyn-dot)'},
+  thor: { label:'胸腔外科', cls:'d-thor', dot:'var(--c-thor-dot)' },
+  oth:  { label:'其他',     cls:'d-oth',  dot:'var(--c-oth-dot)'  },
+};
+
+function getDeptLabel(b) {
+  if (b.dept === 'oth' && b.customDept) return b.customDept;
+  return DEPT[b.dept]?.label ?? '其他';
+}
+
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const BASE  = new Date(2026, 5, 15);
+let weekOff = 0;
+let nextId  = Date.now(); // timestamp-based → 跨裝置唯一
+
+let allBk = {
+  // ── 本週（2026/06/15–06/20）── 近乎滿檔，使用附醫實際醫師與術式
+  0: [
+    // 週一
+    {id:1, day:0,m:0,s:8, e:11,dept:'uro',  doc:'葉劭德',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11401234',note:'術前需備血'},
+    {id:2, day:0,m:0,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'毛士鵬', proc:'達文西輔助腹腔鏡子宮全切除術',    dur:3,mrn:'11405678',note:''},
+    {id:3, day:0,m:1,s:8, e:12,dept:'surg', doc:'宋睿祥',assist:'',     proc:'達文西輔助腹腔鏡低位前切除術',    dur:4,mrn:'11402345',note:'高風險，備腸造口'},
+    {id:4, day:0,m:1,s:13,e:16,dept:'thor', doc:'張統優',assist:'郭光泰', proc:'達文西輔助胸腔鏡肺葉切除術',     dur:3,mrn:'11406789',note:''},
+    // 週二
+    {id:5, day:1,m:0,s:8, e:11,dept:'uro',  doc:'吳佳璋',assist:'',     proc:'達文西輔助腹腔鏡腎臟部分切除術',  dur:3,mrn:'11403456',note:''},
+    {id:6, day:1,m:0,s:13,e:16,dept:'obgyn',doc:'毛士鵬',assist:'',     proc:'達文西輔助腹腔鏡卵巢囊腫切除術',  dur:3,mrn:'11407890',note:''},
+    {id:7, day:1,m:1,s:8, e:11,dept:'thor', doc:'郭光泰',assist:'',     proc:'達文西輔助胸腔鏡縱膈腔腫瘤切除術', dur:3,mrn:'11408901',note:''},
+    {id:8, day:1,m:1,s:13,e:17,dept:'uro',  doc:'高偉棠',assist:'崔克宏', proc:'達文西輔助腹腔鏡根治性膀胱切除術', dur:4,mrn:'11409012',note:'預計尿路重建'},
+    // 週三
+    {id:9, day:2,m:0,s:8, e:12,dept:'obgyn',doc:'陳嘉維',assist:'賴鴻政', proc:'達文西輔助腹腔鏡根治性子宮切除術', dur:4,mrn:'11410123',note:'合併骨盆淋巴廓清'},
+    {id:10,day:2,m:0,s:13,e:15,dept:'surg', doc:'周大鈞',assist:'',     proc:'達文西輔助腹腔鏡膽囊切除術',     dur:2,mrn:'11411234',note:''},
+    {id:11,day:2,m:1,s:8, e:11,dept:'uro',  doc:'崔克宏',assist:'',     proc:'達文西輔助腹腔鏡腎盂成形術',     dur:3,mrn:'11412345',note:''},
+    {id:12,day:2,m:1,s:13,e:16,dept:'obgyn',doc:'劉偉民',assist:'邱德生', proc:'達文西輔助腹腔鏡子宮肌瘤切除術',  dur:3,mrn:'11413456',note:'多發性肌瘤'},
+    // 週四
+    {id:13,day:3,m:0,s:8, e:11,dept:'thor', doc:'張統優',assist:'',     proc:'達文西輔助胸腔鏡肺葉切除術',     dur:3,mrn:'11414567',note:''},
+    {id:14,day:3,m:0,s:13,e:16,dept:'uro',  doc:'葉劭德',assist:'吳佳璋', proc:'達文西輔助腹腔鏡腎臟部分切除術',  dur:3,mrn:'11415678',note:''},
+    {id:15,day:3,m:1,s:8, e:12,dept:'surg', doc:'張東晟',assist:'李營東', proc:'達文西輔助腹腔鏡全直腸繫膜切除術', dur:4,mrn:'11416789',note:''},
+    {id:16,day:3,m:1,s:13,e:16,dept:'obgyn',doc:'邱德生',assist:'',     proc:'達文西輔助腹腔鏡子宮全切除術',    dur:3,mrn:'11417890',note:''},
+    // 週五
+    {id:17,day:4,m:0,s:8, e:11,dept:'uro',  doc:'黃建榮',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11418901',note:''},
+    {id:18,day:4,m:0,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'陳嘉維', proc:'達文西輔助腹腔鏡根治性子宮切除術', dur:3,mrn:'11419012',note:''},
+    {id:19,day:4,m:1,s:8, e:11,dept:'oth',  doc:'林以志',assist:'欒智偉', proc:'達文西輔助口咽腫瘤切除術',      dur:3,mrn:'11420123',note:'',customDept:'耳鼻喉科'},
+    {id:20,day:4,m:1,s:13,e:16,dept:'surg', doc:'宋睿祥',assist:'',     proc:'達文西輔助腹腔鏡胃癌根治術',     dur:3,mrn:'11421234',note:''},
+    // 週六
+    {id:21,day:5,m:0,s:8, e:11,dept:'uro',  doc:'吳佳璋',assist:'',     proc:'達文西輔助腹腔鏡膀胱切除術',     dur:3,mrn:'11422345',note:''},
+    {id:22,day:5,m:1,s:9, e:12,dept:'obgyn',doc:'陳嘉維',assist:'',     proc:'達文西輔助腹腔鏡子宮肌瘤切除術',  dur:3,mrn:'11423456',note:''},
+  ],
+  // ── 上週（2026/06/08–06/13）──
+  '-1': [
+    {id:101,day:0,m:0,s:8, e:12,dept:'surg', doc:'張東晟',assist:'李營東', proc:'達文西輔助腹腔鏡低位前切除術',    dur:4,mrn:'11390123',note:''},
+    {id:102,day:1,m:0,s:8, e:11,dept:'uro',  doc:'葉劭德',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11391234',note:''},
+    {id:103,day:1,m:1,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'毛士鵬', proc:'達文西輔助腹腔鏡根治性子宮切除術', dur:3,mrn:'11392345',note:''},
+    {id:104,day:2,m:0,s:8, e:11,dept:'thor', doc:'張統優',assist:'郭光泰', proc:'達文西輔助胸腔鏡肺葉切除術',     dur:3,mrn:'11393456',note:''},
+    {id:105,day:3,m:1,s:8, e:11,dept:'uro',  doc:'高偉棠',assist:'',     proc:'達文西輔助腹腔鏡腎臟部分切除術',  dur:3,mrn:'11394567',note:''},
+    {id:106,day:3,m:0,s:13,e:16,dept:'obgyn',doc:'劉偉民',assist:'',     proc:'達文西輔助腹腔鏡子宮肌瘤切除術',  dur:3,mrn:'11395678',note:''},
+    {id:107,day:4,m:0,s:8, e:11,dept:'oth',  doc:'張廷碩',assist:'',     proc:'達文西輔助舌根腫瘤切除術',      dur:3,mrn:'11396789',note:'',customDept:'耳鼻喉科'},
+    {id:108,day:4,m:1,s:8, e:12,dept:'surg', doc:'宋睿祥',assist:'周大鈞', proc:'達文西輔助腹腔鏡胃癌根治術',     dur:4,mrn:'11397890',note:''},
+  ],
+};
+
+function weekBk(off=weekOff) { return allBk[off] || []; }
+function allBkFlat() {
+  return Object.entries(allBk).flatMap(([off,list]) =>
+    list.map(b=>({...b,weekOff:parseInt(off)})));
+}
+function findBkById(id) {
+  for (const [off,list] of Object.entries(allBk)) {
+    const b = list.find(x=>x.id===id);
+    if (b) return { b, off: parseInt(off) };
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════
+// DATE HELPERS
+// ══════════════════════════════════════════
+function weekStart(off=weekOff) {
+  const d=new Date(BASE); d.setDate(d.getDate()+off*7); return d;
+}
+function dayDate(di,off=weekOff) {
+  const d=weekStart(off); d.setDate(d.getDate()+di); return d;
+}
+function isToday(di) {
+  return weekOff===0 && dayDate(di).toDateString()===TODAY.toDateString();
+}
+function pad2(n) { return String(n).padStart(2,'0'); }
+function fmtMD(d) { return `${d.getMonth()+1}月${d.getDate()}日`; }
+function fmtYMD(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function parseLD(str) { const [y,m,d]=str.split('-').map(Number); return new Date(y,m-1,d); }
+
+// ══════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════
+function render() { updateWeekLabel(); renderHeader(); renderTimeGutter(); renderCols(); renderStats(); }
+
+function updateWeekLabel() {
+  const s=weekStart(); const e=new Date(s); e.setDate(e.getDate()+5);
+  document.getElementById('week-label').textContent=`${s.getFullYear()}年${fmtMD(s)} — ${fmtMD(e)}`;
+}
+
+function renderHeader() {
+  const head=document.getElementById('cal-head');
+  head.querySelectorAll('.cal-head-day').forEach(n=>n.remove());
+  for (let d=0;d<6;d++) {
+    const dd=dayDate(d); const today=isToday(d);
+    const col=document.createElement('div'); col.className='cal-head-day';
+    col.innerHTML=`<div class="day-meta">
+      <div class="day-weekname">${DAYS[d]}&nbsp;&nbsp;${dd.getMonth()+1}/${dd.getDate()}</div>
+      <div class="day-num-wrap${today?' today':''}"><div class="day-num">${dd.getDate()}</div></div>
+    </div>
+    <div class="machine-heads"><div class="machine-head">機台一</div><div class="machine-head">機台二</div></div>`;
+    head.appendChild(col);
+  }
+}
+
+function renderTimeGutter() {
+  const g=document.getElementById('time-gutter'); g.innerHTML='';
+  for (let h=START_H;h<END_H;h++) {
+    const el=document.createElement('div'); el.className='time-label';
+    el.textContent=`${pad2(h)}:00`; g.appendChild(el);
+  }
+}
+
+function renderCols() {
+  const cols=document.getElementById('cal-cols'); cols.innerHTML='';
+  const bk=weekBk();
+  for (let d=0;d<6;d++) {
+    const dayCol=document.createElement('div'); dayCol.className='cal-day-col';
+    for (let m=0;m<2;m++) {
+      const mc=document.createElement('div'); mc.className='machine-col';
+      mc.innerHTML=`<div class="lunch-band"></div><div class="lunch-label">午休</div>`;
+      for (let h=0;h<TOTAL_H;h++) {
+        const line=document.createElement('div');
+        line.className='h-line'+(h===0?' major':''); line.style.top=`${h*HOUR_H}px`; mc.appendChild(line);
+        const cell=document.createElement('div'); cell.className='hour-cell';
+        cell.style.top=`${h*HOUR_H}px`; cell.innerHTML=`<div class="plus-hint">+</div>`;
+        const [dd,mm,hr]=[d,m,START_H+h];
+        cell.onclick=()=>openModalWithCtx(dd,mm,hr); mc.appendChild(cell);
+      }
+      bk.filter(b=>b.day===d&&b.m===m).forEach(b=>{
+        const dep=DEPT[b.dept];
+        const label=getDeptLabel(b);
+        const bl=document.createElement('div');
+        bl.className=`booking-block ${dep.cls}`;
+        bl.style.top=`${(b.s-START_H)*HOUR_H+3}px`;
+        bl.style.height=`${(b.e-b.s)*HOUR_H-6}px`;
+        bl.innerHTML=`
+          <div class="b-dept-tag"><div class="b-dept-dot" style="background:${dep.dot}"></div>${label}</div>
+          <div class="b-doctor">⚕ ${b.doc} 醫師</div>
+          <div class="b-procedure">${b.proc}</div>
+          <div class="b-time">${pad2(b.s)}:00 – ${pad2(b.e)}:00</div>`;
+        bl.title=`${label} | ${b.doc} 醫師\n${b.proc}`;
+        bl.onclick=(e)=>{ e.stopPropagation(); openDetail(b.id); };
+        mc.appendChild(bl);
+      });
+      dayCol.appendChild(mc);
+    }
+    cols.appendChild(dayCol);
+  }
+}
+
+function renderStats() {
+  const bk=weekBk();
+  if (!bk.length) {
+    document.getElementById('stat-count').textContent='0';
+    document.getElementById('stat-hours').textContent='0';
+    document.getElementById('stat-topdept').textContent='—';
+    ['util1-pct','util2-pct'].forEach(id=>document.getElementById(id).textContent='0%');
+    ['util1-bar','util2-bar'].forEach(id=>document.getElementById(id).style.width='0%');
+    return;
+  }
+  let h0=0,h1=0; const deptHrs={};
+  bk.forEach(b=>{
+    const hrs=b.e-b.s;
+    if(b.m===0)h0+=hrs; else h1+=hrs;
+    deptHrs[b.dept]=(deptHrs[b.dept]||0)+hrs;
+  });
+  const tw=WORK_H*WORK_DAYS;
+  const p0=Math.min(Math.round(h0/tw*100),100);
+  const p1=Math.min(Math.round(h1/tw*100),100);
+  document.getElementById('util1-pct').textContent=p0+'%';
+  document.getElementById('util2-pct').textContent=p1+'%';
+  document.getElementById('util1-bar').style.width=p0+'%';
+  document.getElementById('util2-bar').style.width=p1+'%';
+  const topDept=Object.entries(deptHrs).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stat-count').textContent=bk.length;
+  document.getElementById('stat-hours').textContent=bk.reduce((a,b)=>a+(b.e-b.s),0);
+  document.getElementById('stat-topdept').textContent=DEPT[topDept[0]].label;
+}
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+function changeWeek(d) { weekOff+=d; render(); }
+function goToday() { weekOff=0; render(); showToast('已跳回本週'); }
+
+// ══════════════════════════════════════════
+// BOOKING MODAL
+// ══════════════════════════════════════════
+let selMach=0, editingId=null, editingOff=null;
+
+function buildTimeSelects() {
+  const sEl=document.getElementById('f-start'); const eEl=document.getElementById('f-end');
+  sEl.innerHTML=''; eEl.innerHTML='';
+  for(let h=START_H;h<END_H;h++) sEl.add(new Option(`${pad2(h)}:00`,h));
+  for(let h=START_H+1;h<=END_H;h++) eEl.add(new Option(`${pad2(h)}:00`,h));
+}
+
+function onDeptChange() {
+  const v=document.getElementById('f-dept').value;
+  document.getElementById('custom-dept-wrap').classList.toggle('show', v==='oth');
+}
+
+function openModal() {
+  editingId=null; editingOff=null;
+  document.getElementById('modal-title').textContent='新增排刀預約';
+  const s=weekStart();
+  document.getElementById('f-date').value=fmtYMD(s);
+  document.getElementById('f-start').value=8; document.getElementById('f-end').value=10;
+  document.getElementById('modal-sub').textContent='請填寫以下資訊';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openModalWithCtx(day,mach,hr) {
+  editingId=null; editingOff=null;
+  document.getElementById('modal-title').textContent='新增排刀預約';
+  pickMachine(mach);
+  const dd=dayDate(day);
+  document.getElementById('f-date').value=fmtYMD(dd);
+  document.getElementById('f-start').value=hr;
+  document.getElementById('f-end').value=Math.min(hr+2,END_H);
+  document.getElementById('modal-sub').textContent=`${DAYS[day]} ${dd.getMonth()+1}/${dd.getDate()}　機台${mach===0?'一':'二'}`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('custom-dept-wrap').classList.remove('show');
+  ['f-surgeon','f-assist','f-proc','f-mrn','f-note','f-custom-dept'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-dept').value=''; document.getElementById('f-dur').value='';
+  editingId=null; editingOff=null;
+}
+
+function pickMachine(idx) {
+  selMach=idx;
+  document.querySelectorAll('.m-opt').forEach((o,i)=>o.classList.toggle('sel',i===idx));
+}
+
+function submitBooking() {
+  const dept=document.getElementById('f-dept').value;
+  const customDept=document.getElementById('f-custom-dept').value.trim();
+  const surgeon=document.getElementById('f-surgeon').value.trim();
+  const proc=document.getElementById('f-proc').value.trim();
+  const dateVal=document.getElementById('f-date').value;
+  const sH=parseInt(document.getElementById('f-start').value);
+  const eH=parseInt(document.getElementById('f-end').value);
+  const assist=document.getElementById('f-assist').value.trim();
+  const dur=document.getElementById('f-dur').value;
+  const mrn=document.getElementById('f-mrn').value.trim();
+  const note=document.getElementById('f-note').value.trim();
+
+  if(!dept) { showToast('請選擇科別'); return; }
+  if(dept==='oth'&&!customDept) { showToast('請填寫科別名稱'); return; }
+  if(!surgeon) { showToast('請輸入主刀醫師姓名'); return; }
+  if(!proc) { showToast('請輸入手術名稱'); return; }
+  if(!dateVal) { showToast('請選擇日期'); return; }
+  if(eH<=sH) { showToast('結束時間必須晚於開始時間'); return; }
+
+  if (editingId !== null) {
+    // UPDATE existing
+    const list = allBk[editingOff];
+    const idx  = list.findIndex(b=>b.id===editingId);
+    if (idx !== -1) {
+      const d=parseLD(dateVal); const ws=weekStart(editingOff);
+      const diff=Math.round((d-ws)/86400000);
+      if(diff<0||diff>5) { showToast('所選日期不在該週範圍內'); return; }
+      list[idx]={...list[idx],day:diff,m:selMach,s:sH,e:eH,dept,customDept,doc:surgeon,assist,proc,dur:dur?parseInt(dur):null,mrn,note};
+      closeModal(); render(); showToast('預約已更新 ✓');
+      apiCall('update', { booking: bkToApi(list[idx], editingOff) }); // 背景同步
+    }
+  } else {
+    // CREATE new
+    const d=parseLD(dateVal); const ws=weekStart();
+    const diff=Math.round((d-ws)/86400000);
+    if(diff<0||diff>5) { showToast('所選日期不在本週範圍內'); return; }
+    if(!allBk[weekOff]) allBk[weekOff]=[];
+    const newBk={id:++nextId,day:diff,m:selMach,s:sH,e:eH,dept,customDept,doc:surgeon,assist,proc,dur:dur?parseInt(dur):null,mrn,note};
+    allBk[weekOff].push(newBk);
+    closeModal(); render(); showToast('預約已新增 ✓');
+    apiCall('create', { booking: bkToApi(newBk, weekOff) }); // 背景同步
+  }
+}
+
+// ══════════════════════════════════════════
+// DETAIL MODAL
+// ══════════════════════════════════════════
+let viewingId=null, deleteConfirm=false;
+
+function openDetail(id) {
+  const found=findBkById(id); if(!found) return;
+  const {b,off}=found;
+  viewingId=id; deleteConfirm=false;
+  const delBtn=document.getElementById('del-btn');
+  delBtn.textContent='刪除預約'; delBtn.classList.remove('confirm');
+
+  const dep=DEPT[b.dept];
+  const deptLabel=getDeptLabel(b);
+  const dd=dayDate(b.day,off);
+  const dateStr=`${dd.getFullYear()}年${dd.getMonth()+1}月${dd.getDate()}日（${DAYS[b.day]}）`;
+  const timeStr=`${pad2(b.s)}:00 – ${pad2(b.e)}:00（${b.e-b.s} 小時）`;
+
+  document.getElementById('detail-title').textContent=b.proc;
+  document.getElementById('detail-badge').innerHTML=
+    `<div class="detail-dept-badge ${dep.cls}" style="margin-top:6px;">
+      <div class="b-dept-dot" style="background:${dep.dot}"></div>${deptLabel}・機台${b.m===0?'一':'二'}
+    </div>`;
+
+  const rows=[
+    ['日期', dateStr],
+    ['手術時段', timeStr],
+    ['主刀醫師', b.doc ? b.doc+' 醫師' : null],
+    ['助理醫師', b.assist || null],
+    ['手術名稱', b.proc],
+    ['預估時長', b.dur ? b.dur+' 小時' : null],
+    ['病歷號', b.mrn || null],
+    ['備註', b.note || null],
+  ];
+
+  document.getElementById('detail-fields').innerHTML = rows.map(([k,v])=>`
+    <div class="detail-row">
+      <div class="detail-key">${k}</div>
+      <div class="detail-val${!v?' empty':''}">${v||'—'}</div>
+    </div>`).join('');
+
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  viewingId=null; deleteConfirm=false;
+}
+
+function deleteOrConfirm() {
+  if (!deleteConfirm) {
+    deleteConfirm=true;
+    const btn=document.getElementById('del-btn');
+    btn.textContent='確認刪除？'; btn.classList.add('confirm');
+    return;
+  }
+  if (viewingId===null) return;
+  const found=findBkById(viewingId); if(!found) return;
+  const {off}=found;
+  const deletedId = viewingId;
+  allBk[off]=allBk[off].filter(b=>b.id!==deletedId);
+  closeDetail(); render(); showToast('預約已刪除');
+  apiCall('delete', { id: deletedId }); // 背景同步
+}
+
+function editBooking() {
+  const found=findBkById(viewingId); if(!found) return;
+  const {b,off}=found;
+  closeDetail();
+  editingId=b.id; editingOff=off;
+  document.getElementById('modal-title').textContent='編輯排刀預約';
+  document.getElementById('modal-sub').textContent=`編輯中：${b.proc}`;
+  pickMachine(b.m);
+  document.getElementById('f-date').value=fmtYMD(dayDate(b.day,off));
+  document.getElementById('f-start').value=b.s;
+  document.getElementById('f-end').value=b.e;
+  document.getElementById('f-dept').value=b.dept;
+  onDeptChange();
+  if(b.dept==='oth') document.getElementById('f-custom-dept').value=b.customDept||'';
+  document.getElementById('f-surgeon').value=b.doc;
+  document.getElementById('f-assist').value=b.assist||'';
+  document.getElementById('f-proc').value=b.proc;
+  document.getElementById('f-dur').value=b.dur||'';
+  document.getElementById('f-mrn').value=b.mrn||'';
+  document.getElementById('f-note').value=b.note||'';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+// ══════════════════════════════════════════
+// MONTH PREVIEW
+// ══════════════════════════════════════════
+let prevY=TODAY.getFullYear(), prevM=TODAY.getMonth();
+function openMonthPreview() { prevY=weekStart().getFullYear(); prevM=weekStart().getMonth(); renderMonthPreview(); document.getElementById('month-overlay').classList.add('open'); }
+function closeMonthPreview() { document.getElementById('month-overlay').classList.remove('open'); }
+function changeMonthPreview(d) { prevM+=d; if(prevM>11){prevM=0;prevY++;} if(prevM<0){prevM=11;prevY--;} renderMonthPreview(); }
+function renderMonthPreview() {
+  document.getElementById('month-label').textContent=`${prevY}年${prevM+1}月`;
+  const cells=document.getElementById('month-cells'); cells.innerHTML='';
+  const bkDates={};
+  Object.entries(allBk).forEach(([off,list])=>{
+    list.forEach(b=>{ const dd=dayDate(b.day,parseInt(off)); const key=fmtYMD(dd); if(!bkDates[key])bkDates[key]=[]; bkDates[key].push(b.dept); });
+  });
+  const first=new Date(prevY,prevM,1);
+  let sdow=(first.getDay()+6)%7;
+  const dim=new Date(prevY,prevM+1,0).getDate();
+  const pmd=new Date(prevY,prevM,0).getDate();
+  for(let i=sdow-1;i>=0;i--) { const c=document.createElement('div'); c.className='month-cell other-month'; c.innerHTML=`<span>${pmd-i}</span>`; cells.appendChild(c); }
+  for(let d=1;d<=dim;d++) {
+    const dt=new Date(prevY,prevM,d); const key=fmtYMD(dt);
+    const isT=dt.toDateString()===TODAY.toDateString(); const hasBk=bkDates[key];
+    const c=document.createElement('div');
+    c.className='month-cell'+(isT?' today-cell':'')+(hasBk&&!isT?' has-booking':'');
+    c.innerHTML=`<span>${d}</span>`;
+    if(hasBk){const dots=document.createElement('div');dots.className='month-dots';const seen=new Set();hasBk.forEach(dep=>{if(seen.has(dep))return;seen.add(dep);const dot=document.createElement('div');dot.className='month-dot';dot.style.background=`var(--c-${dep}-dot)`;dots.appendChild(dot);});c.appendChild(dots);}
+    c.onclick=()=>jumpToWeek(dt); cells.appendChild(c);
+  }
+  const total=sdow+dim; const remain=total%7===0?0:7-(total%7);
+  for(let i=1;i<=remain;i++){const c=document.createElement('div');c.className='month-cell other-month';c.innerHTML=`<span>${i}</span>`;cells.appendChild(c);}
+}
+function jumpToWeek(date) { const diff=Math.floor((date-BASE)/86400000); weekOff=Math.floor(diff/7); closeMonthPreview(); render(); }
+
+// ══════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════
+function openHistory() { document.getElementById('hist-filter-dept').value=''; document.getElementById('hist-filter-mach').value=''; renderHistory(); document.getElementById('hist-overlay').classList.add('open'); }
+function closeHistory() { document.getElementById('hist-overlay').classList.remove('open'); }
+function renderHistory() {
+  const deptF=document.getElementById('hist-filter-dept').value;
+  const machF=document.getElementById('hist-filter-mach').value;
+  let items=allBkFlat();
+  if(deptF) items=items.filter(b=>b.dept===deptF);
+  if(machF) items=items.filter(b=>b.m===parseInt(machF));
+  items.sort((a,b)=>{ const da=dayDate(a.day,a.weekOff); const db=dayDate(b.day,b.weekOff); return db-da; });
+  const body=document.getElementById('hist-body');
+  if(!items.length){body.innerHTML='<div class="hist-empty">沒有符合條件的紀錄</div>';return;}
+  const groups={};
+  items.forEach(b=>{ const ws=weekStart(b.weekOff); const we=new Date(ws);we.setDate(we.getDate()+5); const key=`${ws.getFullYear()}年${fmtMD(ws)}—${fmtMD(we)}`; if(!groups[key])groups[key]=[]; groups[key].push(b); });
+  body.innerHTML='';
+  Object.entries(groups).forEach(([wl,list])=>{
+    const g=document.createElement('div'); g.className='hist-week-group';
+    g.innerHTML=`<div class="hist-week-label">${wl}</div>`;
+    list.forEach(b=>{
+      const dep=DEPT[b.dept]; const dd=dayDate(b.day,b.weekOff);
+      const row=document.createElement('div'); row.className='hist-row';
+      row.innerHTML=`<div class="hist-dept-chip" style="background:${dep.dot}"></div>
+        <div class="hist-info">
+          <div class="hist-title">${b.proc}</div>
+          <div class="hist-meta">${getDeptLabel(b)} · ${b.doc} 醫師 · 機台${b.m===0?'一':'二'} · ${DAYS[b.day]} ${dd.getMonth()+1}/${dd.getDate()}</div>
+        </div>
+        <div class="hist-time">${pad2(b.s)}:00–${pad2(b.e)}:00</div>`;
+      row.onclick=()=>{ closeHistory(); openDetail(b.id); };
+      g.appendChild(row);
+    });
+    body.appendChild(g);
+  });
+}
+
+// ══════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════
+function exportCSV() {
+  const bk=weekBk();
+  if(!bk.length){showToast('本週無資料可匯出');return;}
+  const ws=weekStart();
+  const header='日期,星期,機台,科別,主刀醫師,助理醫師,手術名稱,開始時間,結束時間,時長(h),病歷號,備註\n';
+  const rows=bk.map(b=>{
+    const dd=dayDate(b.day);
+    return [`${dd.getFullYear()}/${dd.getMonth()+1}/${dd.getDate()}`,DAYS[b.day],`機台${b.m===0?'一':'二'}`,getDeptLabel(b),b.doc,b.assist||'',b.proc,`${pad2(b.s)}:00`,`${pad2(b.e)}:00`,b.e-b.s,b.mrn||'',b.note||''].join(',');
+  }).join('\n');
+  const blob=new Blob(['\uFEFF'+header+rows],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url;
+  a.download=`達文西排刀_${fmtYMD(ws)}.csv`; a.click();
+  URL.revokeObjectURL(url); showToast('CSV 已匯出 ✓');
+}
+
+// ══════════════════════════════════════════
+// OVERLAY / KEYBOARD
+// ══════════════════════════════════════════
+function overlayClick(e,id) {
+  if(e.target.id!==id) return;
+  if(id==='modal-overlay') closeModal();
+  else if(id==='detail-overlay') closeDetail();
+  else if(id==='month-overlay') closeMonthPreview();
+  else if(id==='hist-overlay') closeHistory();
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closeModal();closeDetail();closeMonthPreview();closeHistory(); }
+  if(!document.querySelector('.modal-overlay.open')){
+    if(e.key==='ArrowLeft') changeWeek(-1);
+    if(e.key==='ArrowRight') changeWeek(1);
+  }
+});
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+let toastT;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+
+// ══════════════════════════════════════════
+// API 串接層
+// ══════════════════════════════════════════
+
+// ▼ 部署完成後，把 Apps Script 網址填入此處 ▼
+const API_URL = 'https://script.google.com/macros/s/AKfycbz3dZesTGij4xHb3pUH_H552R9PKHFufQ-uxuZ5u0mvGOG5cl17HHeq6qdjxM8B7YivYw/exec';
+// ▲ 例如：'https://script.google.com/macros/s/AKfyc.../exec' ▲
+
+const OFFLINE = !API_URL;
+
+function setLoading(on) {
+  document.getElementById('loading-overlay').style.display = on ? 'flex' : 'none';
+}
+
+// 本地格式 → API 格式
+function bkToApi(b, off) {
+  const dd = dayDate(b.day, off);
+  return {
+    id:        b.id,
+    date:      fmtYMD(dd),
+    machine:   b.m,
+    startH:    b.s,
+    endH:      b.e,
+    dept:      b.dept,
+    customDept:b.customDept || '',
+    doctor:    b.doc,
+    assist:    b.assist || '',
+    procedure: b.proc,
+    duration:  b.dur || '',
+    mrn:       b.mrn || '',
+    note:      b.note || '',
+  };
+}
+
+// API 格式 → 本地格式
+function apiToBk(row) {
+  if (!row.date) return null;
+  const date = parseLD(row.date);
+  const diff  = Math.round((date - BASE) / 86400000);
+  const off   = Math.floor(diff / 7);
+  const day   = diff - off * 7;
+  if (day < 0 || day > 5) return null; // 排除週日
+  return {
+    id:        Number(row.id),
+    day,
+    m:         parseInt(row.machine),
+    s:         parseInt(row.startH),
+    e:         parseInt(row.endH),
+    dept:      row.dept,
+    customDept:row.customDept || '',
+    doc:       row.doctor,
+    assist:    row.assist || '',
+    proc:      row.procedure,
+    dur:       row.duration ? parseInt(row.duration) : null,
+    mrn:       row.mrn || '',
+    note:      row.note || '',
+    _off: off,
+  };
+}
+
+// 通用 API 呼叫（POST，fire-and-forget 用）
+async function apiCall(action, payload = {}) {
+  if (OFFLINE) return { success: true };
+  try {
+    const res = await fetch(API_URL, {
+      method:   'POST',
+      headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
+      body:     JSON.stringify({ action, ...payload }),
+      redirect: 'follow',
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'API error');
+    return data;
+  } catch (err) {
+    console.error('[API]', err);
+    showToast('⚠ 同步失敗，資料僅存於本機');
+    return { success: false };
+  }
+}
+
+// 啟動時從 Sheets 載入全部資料
+async function loadData() {
+  if (OFFLINE) { render(); return; }
+  setLoading(true);
+  try {
+    const res  = await fetch(API_URL + '?action=getAll', { redirect: 'follow' });
+    const data = await res.json();
+    if (!data.success || !data.bookings) throw new Error('Bad response');
+
+    // 只有 Sheets 有實際資料時才覆蓋示範資料
+    if (data.bookings.length > 0) {
+      allBk = {};
+      data.bookings.forEach(row => {
+        const b = apiToBk(row);
+        if (!b) return;
+        const off = b._off; delete b._off;
+        if (!allBk[off]) allBk[off] = [];
+        allBk[off].push(b);
+      });
+      nextId = Math.max(Date.now(), ...data.bookings.map(r => Number(r.id) || 0));
+    }
+  } catch (err) {
+    console.warn('[loadData] failed, using demo data:', err);
+    showToast('⚠ 無法連線 Sheets，顯示示範資料');
+  } finally {
+    setLoading(false);
+    render();
+  }
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+buildTimeSelects();
+loadData();
+</script>
+</body>
+</html>
