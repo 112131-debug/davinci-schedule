@@ -502,7 +502,7 @@ const BASE  = new Date(2026, 5, 15);
 let weekOff = 0;
 let nextId  = Date.now(); // timestamp-based → 跨裝置唯一
 
-let allBk = {
+const DEMO_BK = {
   // ── 本週（2026/06/15–06/20）── 近乎滿檔，使用附醫實際醫師與術式
   0: [
     // 週一
@@ -547,6 +547,9 @@ let allBk = {
   ],
 };
 
+// allBk 初始為示範資料的深拷貝，loadData 成功後會被 Sheets 資料取代
+let allBk = JSON.parse(JSON.stringify(DEMO_BK));
+
 function weekBk(off=weekOff) { return allBk[off] || []; }
 function allBkFlat() {
   return Object.entries(allBk).flatMap(([off,list]) =>
@@ -575,7 +578,7 @@ function isToday(di) {
 function pad2(n) { return String(n).padStart(2,'0'); }
 function fmtMD(d) { return `${d.getMonth()+1}月${d.getDate()}日`; }
 function fmtYMD(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
-function parseLD(str) { const [y,m,d]=str.split('-').map(Number); return new Date(y,m-1,d); }
+function parseLD(str) { const [y,m,d]=str.slice(0,10).split('-').map(Number); return new Date(y,m-1,d); }
 
 // ══════════════════════════════════════════
 // RENDER
@@ -617,7 +620,7 @@ function renderCols() {
     const dayCol=document.createElement('div'); dayCol.className='cal-day-col';
     for (let m=0;m<2;m++) {
       const mc=document.createElement('div'); mc.className='machine-col';
-      mc.innerHTML=`<div class="lunch-band"></div><div class="lunch-label">午休</div>`;
+      mc.innerHTML=``;
       for (let h=0;h<TOTAL_H;h++) {
         const line=document.createElement('div');
         line.className='h-line'+(h===0?' major':''); line.style.top=`${h*HOUR_H}px`; mc.appendChild(line);
@@ -1101,7 +1104,7 @@ async function loadData() {
 // ══════════════════════════════════════════
 async function bulkImport() {
   if (OFFLINE) { showToast('尚未設定 API_URL'); return; }
-  const all = Object.entries(allBk).flatMap(([off, list]) =>
+  const all = Object.entries(DEMO_BK).flatMap(([off, list]) =>
     list.map(b => bkToApi(b, parseInt(off)))
   );
   if (!all.length) { showToast('沒有資料可匯入'); return; }
