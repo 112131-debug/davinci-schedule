@@ -503,47 +503,66 @@ let weekOff = 0;
 let nextId  = Date.now(); // timestamp-based → 跨裝置唯一
 
 const DEMO_BK = {
-  // ── 本週（2026/06/15–06/20）── 近乎滿檔，使用附醫實際醫師與術式
+  // ── 本週（2026/06/15–06/20）── 附醫實際醫師與術式，含午休時段手術
   0: [
-    // 週一
-    {id:1, day:0,m:0,s:8, e:11,dept:'uro',  doc:'葉劭德',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11401234',note:'術前需備血'},
-    {id:2, day:0,m:0,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'毛士鵬', proc:'達文西輔助腹腔鏡子宮全切除術',    dur:3,mrn:'11405678',note:''},
-    {id:3, day:0,m:1,s:8, e:12,dept:'surg', doc:'宋睿祥',assist:'',     proc:'達文西輔助腹腔鏡低位前切除術',    dur:4,mrn:'11402345',note:'高風險，備腸造口'},
-    {id:4, day:0,m:1,s:13,e:16,dept:'thor', doc:'張統優',assist:'郭光泰', proc:'達文西輔助胸腔鏡肺葉切除術',     dur:3,mrn:'11406789',note:''},
-    // 週二
-    {id:5, day:1,m:0,s:8, e:11,dept:'uro',  doc:'吳佳璋',assist:'',     proc:'達文西輔助腹腔鏡腎臟部分切除術',  dur:3,mrn:'11403456',note:''},
-    {id:6, day:1,m:0,s:13,e:16,dept:'obgyn',doc:'毛士鵬',assist:'',     proc:'達文西輔助腹腔鏡卵巢囊腫切除術',  dur:3,mrn:'11407890',note:''},
-    {id:7, day:1,m:1,s:8, e:11,dept:'thor', doc:'郭光泰',assist:'',     proc:'達文西輔助胸腔鏡縱膈腔腫瘤切除術', dur:3,mrn:'11408901',note:''},
-    {id:8, day:1,m:1,s:13,e:17,dept:'uro',  doc:'高偉棠',assist:'崔克宏', proc:'達文西輔助腹腔鏡根治性膀胱切除術', dur:4,mrn:'11409012',note:'預計尿路重建'},
-    // 週三
-    {id:9, day:2,m:0,s:8, e:12,dept:'obgyn',doc:'陳嘉維',assist:'賴鴻政', proc:'達文西輔助腹腔鏡根治性子宮切除術', dur:4,mrn:'11410123',note:'合併骨盆淋巴廓清'},
-    {id:10,day:2,m:0,s:13,e:15,dept:'surg', doc:'周大鈞',assist:'',     proc:'達文西輔助腹腔鏡膽囊切除術',     dur:2,mrn:'11411234',note:''},
-    {id:11,day:2,m:1,s:8, e:11,dept:'uro',  doc:'崔克宏',assist:'',     proc:'達文西輔助腹腔鏡腎盂成形術',     dur:3,mrn:'11412345',note:''},
-    {id:12,day:2,m:1,s:13,e:16,dept:'obgyn',doc:'劉偉民',assist:'邱德生', proc:'達文西輔助腹腔鏡子宮肌瘤切除術',  dur:3,mrn:'11413456',note:'多發性肌瘤'},
-    // 週四
-    {id:13,day:3,m:0,s:8, e:11,dept:'thor', doc:'張統優',assist:'',     proc:'達文西輔助胸腔鏡肺葉切除術',     dur:3,mrn:'11414567',note:''},
-    {id:14,day:3,m:0,s:13,e:16,dept:'uro',  doc:'葉劭德',assist:'吳佳璋', proc:'達文西輔助腹腔鏡腎臟部分切除術',  dur:3,mrn:'11415678',note:''},
-    {id:15,day:3,m:1,s:8, e:12,dept:'surg', doc:'張東晟',assist:'李營東', proc:'達文西輔助腹腔鏡全直腸繫膜切除術', dur:4,mrn:'11416789',note:''},
-    {id:16,day:3,m:1,s:13,e:16,dept:'obgyn',doc:'邱德生',assist:'',     proc:'達文西輔助腹腔鏡子宮全切除術',    dur:3,mrn:'11417890',note:''},
-    // 週五
-    {id:17,day:4,m:0,s:8, e:11,dept:'uro',  doc:'黃建榮',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11418901',note:''},
-    {id:18,day:4,m:0,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'陳嘉維', proc:'達文西輔助腹腔鏡根治性子宮切除術', dur:3,mrn:'11419012',note:''},
-    {id:19,day:4,m:1,s:8, e:11,dept:'oth',  doc:'林以志',assist:'欒智偉', proc:'達文西輔助口咽腫瘤切除術',      dur:3,mrn:'11420123',note:'',customDept:'耳鼻喉科'},
-    {id:20,day:4,m:1,s:13,e:16,dept:'surg', doc:'宋睿祥',assist:'',     proc:'達文西輔助腹腔鏡胃癌根治術',     dur:3,mrn:'11421234',note:''},
-    // 週六
-    {id:21,day:5,m:0,s:8, e:11,dept:'uro',  doc:'吳佳璋',assist:'',     proc:'達文西輔助腹腔鏡膀胱切除術',     dur:3,mrn:'11422345',note:''},
-    {id:22,day:5,m:1,s:9, e:12,dept:'obgyn',doc:'陳嘉維',assist:'',     proc:'達文西輔助腹腔鏡子宮肌瘤切除術',  dur:3,mrn:'11423456',note:''},
+    // 週一 機台一
+    {id:1, day:0,m:0,s:8, e:11,dept:'uro',  doc:'葉劭德',assist:'崔克宏',proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11401001',note:'術前需備血'},
+    {id:2, day:0,m:0,s:11,e:13,dept:'uro',  doc:'高偉棠',assist:'',     proc:'達文西輔助腹腔鏡腎盂成形術',       dur:2,mrn:'11401002',note:''},
+    {id:3, day:0,m:0,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'毛士鵬',proc:'達文西輔助腹腔鏡根治性子宮切除術',  dur:3,mrn:'11401003',note:'合併骨盆淋巴廓清'},
+    // 週一 機台二
+    {id:4, day:0,m:1,s:8, e:12,dept:'surg', doc:'張東晟',assist:'李營東',proc:'達文西輔助腹腔鏡全直腸繫膜切除術',  dur:4,mrn:'11401004',note:'高風險，備腸造口'},
+    {id:5, day:0,m:1,s:13,e:16,dept:'thor', doc:'張統優',assist:'郭光泰',proc:'達文西輔助胸腔鏡肺葉切除術',       dur:3,mrn:'11401005',note:''},
+    // 週二 機台一
+    {id:6, day:1,m:0,s:8, e:11,dept:'obgyn',doc:'劉偉民',assist:'邱德生',proc:'達文西輔助腹腔鏡子宮肌瘤切除術',   dur:3,mrn:'11402001',note:'多發性肌瘤'},
+    {id:7, day:1,m:0,s:11,e:14,dept:'obgyn',doc:'陳嘉維',assist:'',     proc:'達文西輔助腹腔鏡卵巢囊腫切除術',   dur:3,mrn:'11402002',note:''},
+    {id:8, day:1,m:0,s:14,e:17,dept:'uro',  doc:'吳佳璋',assist:'',     proc:'達文西輔助腹腔鏡腎臟部分切除術',   dur:3,mrn:'11402003',note:''},
+    // 週二 機台二
+    {id:9, day:1,m:1,s:8, e:11,dept:'thor', doc:'郭光泰',assist:'',     proc:'達文西輔助胸腔鏡縱膈腔腫瘤切除術',  dur:3,mrn:'11402004',note:''},
+    {id:10,day:1,m:1,s:13,e:17,dept:'uro',  doc:'高偉棠',assist:'崔克宏',proc:'達文西輔助腹腔鏡根治性膀胱切除術', dur:4,mrn:'11402005',note:'預計尿路重建'},
+    // 週三 機台一
+    {id:11,day:2,m:0,s:8, e:12,dept:'surg', doc:'宋睿祥',assist:'周大鈞',proc:'達文西輔助腹腔鏡低位前切除術',    dur:4,mrn:'11403001',note:''},
+    {id:12,day:2,m:0,s:13,e:16,dept:'obgyn',doc:'毛士鵬',assist:'',     proc:'達文西輔助腹腔鏡子宮全切除術',     dur:3,mrn:'11403002',note:''},
+    // 週三 機台二
+    {id:13,day:2,m:1,s:8, e:11,dept:'uro',  doc:'黃建榮',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11403003',note:''},
+    {id:14,day:2,m:1,s:11,e:13,dept:'oth',  doc:'林以志',assist:'欒智偉',proc:'達文西輔助口咽腫瘤切除術',        dur:2,mrn:'11403004',note:'',customDept:'耳鼻喉科'},
+    {id:15,day:2,m:1,s:13,e:16,dept:'obgyn',doc:'陳子健',assist:'賴鴻政',proc:'達文西輔助腹腔鏡根治性子宮切除術', dur:3,mrn:'11403005',note:''},
+    // 週四 機台一
+    {id:16,day:3,m:0,s:8, e:11,dept:'thor', doc:'張統優',assist:'',     proc:'達文西輔助胸腔鏡食道切除術',       dur:3,mrn:'11404001',note:''},
+    {id:17,day:3,m:0,s:13,e:16,dept:'uro',  doc:'葉劭德',assist:'吳佳璋',proc:'達文西輔助腹腔鏡腎臟部分切除術',   dur:3,mrn:'11404002',note:''},
+    // 週四 機台二
+    {id:18,day:3,m:1,s:8, e:12,dept:'obgyn',doc:'邱德生',assist:'',     proc:'達文西輔助腹腔鏡根治性子宮切除術',  dur:4,mrn:'11404003',note:'合併骨盆淋巴廓清'},
+    {id:19,day:3,m:1,s:13,e:16,dept:'surg', doc:'李營東',assist:'',     proc:'達文西輔助腹腔鏡乙狀結腸切除術',   dur:3,mrn:'11404004',note:''},
+    // 週五 機台一
+    {id:20,day:4,m:0,s:8, e:11,dept:'uro',  doc:'崔克宏',assist:'',     proc:'達文西輔助腹腔鏡腎臟部分切除術',   dur:3,mrn:'11405001',note:''},
+    {id:21,day:4,m:0,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'陳嘉維',proc:'達文西輔助腹腔鏡卵巢囊腫切除術',  dur:3,mrn:'11405002',note:''},
+    // 週五 機台二
+    {id:22,day:4,m:1,s:8, e:11,dept:'oth',  doc:'張廷碩',assist:'欒智偉',proc:'達文西輔助舌根腫瘤切除術',        dur:3,mrn:'11405003',note:'',customDept:'耳鼻喉科'},
+    {id:23,day:4,m:1,s:13,e:16,dept:'surg', doc:'宋睿祥',assist:'周大鈞',proc:'達文西輔助腹腔鏡胃癌根治術',      dur:3,mrn:'11405004',note:''},
+    // 週六 機台一
+    {id:24,day:5,m:0,s:8, e:11,dept:'uro',  doc:'吳佳璋',assist:'',     proc:'達文西輔助腹腔鏡膀胱切除術',       dur:3,mrn:'11406001',note:''},
+    // 週六 機台二
+    {id:25,day:5,m:1,s:9, e:12,dept:'obgyn',doc:'劉偉民',assist:'',     proc:'達文西輔助腹腔鏡子宮肌瘤切除術',   dur:3,mrn:'11406002',note:''},
   ],
   // ── 上週（2026/06/08–06/13）──
   '-1': [
-    {id:101,day:0,m:0,s:8, e:12,dept:'surg', doc:'張東晟',assist:'李營東', proc:'達文西輔助腹腔鏡低位前切除術',    dur:4,mrn:'11390123',note:''},
-    {id:102,day:1,m:0,s:8, e:11,dept:'uro',  doc:'葉劭德',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11391234',note:''},
-    {id:103,day:1,m:1,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'毛士鵬', proc:'達文西輔助腹腔鏡根治性子宮切除術', dur:3,mrn:'11392345',note:''},
-    {id:104,day:2,m:0,s:8, e:11,dept:'thor', doc:'張統優',assist:'郭光泰', proc:'達文西輔助胸腔鏡肺葉切除術',     dur:3,mrn:'11393456',note:''},
-    {id:105,day:3,m:1,s:8, e:11,dept:'uro',  doc:'高偉棠',assist:'',     proc:'達文西輔助腹腔鏡腎臟部分切除術',  dur:3,mrn:'11394567',note:''},
-    {id:106,day:3,m:0,s:13,e:16,dept:'obgyn',doc:'劉偉民',assist:'',     proc:'達文西輔助腹腔鏡子宮肌瘤切除術',  dur:3,mrn:'11395678',note:''},
-    {id:107,day:4,m:0,s:8, e:11,dept:'oth',  doc:'張廷碩',assist:'',     proc:'達文西輔助舌根腫瘤切除術',      dur:3,mrn:'11396789',note:'',customDept:'耳鼻喉科'},
-    {id:108,day:4,m:1,s:8, e:12,dept:'surg', doc:'宋睿祥',assist:'周大鈞', proc:'達文西輔助腹腔鏡胃癌根治術',     dur:4,mrn:'11397890',note:''},
+    // 週一
+    {id:101,day:0,m:0,s:8, e:11,dept:'uro',  doc:'葉劭德',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11390001',note:''},
+    {id:102,day:0,m:0,s:13,e:16,dept:'obgyn',doc:'賴鴻政',assist:'毛士鵬',proc:'達文西輔助腹腔鏡根治性子宮切除術', dur:3,mrn:'11390002',note:''},
+    {id:103,day:0,m:1,s:8, e:12,dept:'surg', doc:'張東晟',assist:'李營東',proc:'達文西輔助腹腔鏡低位前切除術',    dur:4,mrn:'11390003',note:''},
+    // 週二
+    {id:104,day:1,m:0,s:8, e:11,dept:'thor', doc:'張統優',assist:'郭光泰',proc:'達文西輔助胸腔鏡肺葉切除術',      dur:3,mrn:'11391001',note:''},
+    {id:105,day:1,m:1,s:8, e:11,dept:'uro',  doc:'高偉棠',assist:'崔克宏',proc:'達文西輔助腹腔鏡腎臟部分切除術',  dur:3,mrn:'11391002',note:''},
+    {id:106,day:1,m:1,s:13,e:16,dept:'obgyn',doc:'陳嘉維',assist:'',     proc:'達文西輔助腹腔鏡子宮全切除術',     dur:3,mrn:'11391003',note:''},
+    // 週三
+    {id:107,day:2,m:0,s:8, e:11,dept:'uro',  doc:'吳佳璋',assist:'',     proc:'達文西輔助腹腔鏡腎盂成形術',       dur:3,mrn:'11392001',note:''},
+    {id:108,day:2,m:1,s:8, e:12,dept:'surg', doc:'宋睿祥',assist:'周大鈞',proc:'達文西輔助腹腔鏡胃癌根治術',      dur:4,mrn:'11392002',note:''},
+    // 週四
+    {id:109,day:3,m:0,s:8, e:11,dept:'obgyn',doc:'劉偉民',assist:'邱德生',proc:'達文西輔助腹腔鏡子宮肌瘤切除術',  dur:3,mrn:'11393001',note:''},
+    {id:110,day:3,m:1,s:13,e:16,dept:'thor', doc:'郭光泰',assist:'',     proc:'達文西輔助胸腔鏡縱膈腔腫瘤切除術',  dur:3,mrn:'11393002',note:''},
+    // 週五
+    {id:111,day:4,m:0,s:8, e:11,dept:'oth',  doc:'林以志',assist:'欒智偉',proc:'達文西輔助口咽腫瘤切除術',        dur:3,mrn:'11394001',note:'',customDept:'耳鼻喉科'},
+    {id:112,day:4,m:1,s:8, e:11,dept:'uro',  doc:'黃建榮',assist:'',     proc:'達文西輔助腹腔鏡根治性攝護腺切除術',dur:3,mrn:'11394002',note:''},
+    {id:113,day:4,m:1,s:13,e:16,dept:'obgyn',doc:'陳子健',assist:'',     proc:'達文西輔助腹腔鏡卵巢囊腫切除術',   dur:3,mrn:'11394003',note:''},
   ],
 };
 
